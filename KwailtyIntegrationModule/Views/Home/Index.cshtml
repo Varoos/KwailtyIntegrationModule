@@ -1,0 +1,178 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+
+<style>
+    #progress {
+        text-align: center;
+        z-index: 1000000;
+        overflow: auto;
+        height: 100%;
+    }
+
+    #load {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        z-index: 9999;
+        background: url("https://www.creditmutuel.fr/cmne/fr/banques/webservices/nswr/images/loading.gif") no-repeat center center rgba(0,0,0,0.26);
+        /*background:url("../../Content/Processing.gif") no-repeat center center rgba(0,0,0,0.25);*/
+    }
+
+    thead {
+        color: white;
+        background-color: #34c4f9 !important;
+    }
+
+    .label {
+        color: #34c4f9;
+    }
+
+    h2 {
+        border-bottom: 3px solid #cc9900;
+        font: 2.75em/1.75em Georgia, serif;
+        color: #996600;
+    }
+</style>
+
+<div id="progress" class="modal">
+    <div class="center">
+        <img src="~/Content/loader4.gif" />
+    </div>
+</div>
+
+<h2 style="color: #34c4f9 "> INTEGRATION MODULE</h2>
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    <div class="container">
+        <br />
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <div class="col-md-8">
+                            <label> <input type="radio" id="rdoStkTransIssue" class="SelectionType"  /> <b>Stock Transfer Issue - VAN</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoStkTransRet" class="SelectionType" /> <b>Stock Transfer Return - VAN</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoSalesInv" class="SelectionType"/> <b>Sales Invoice - VAN</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoSalesRet" class="SelectionType"/> <b>Sales Return - VAN</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoDamageStk" class="SelectionType" /> <b>Damage Stock</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoReceipts" class="SelectionType"/> <b>Receipts</b></label>
+                            <br />
+                            <label> <input type="radio" id="rdoPDC" class="SelectionType" /> <b>Post-Dated Receipts</b></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="col-md-offset-10 col-md-2">
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary" id="btnok">Post</button>
+                        <button type="button" class="btn btn-primary" id="btnClose" name="Close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/Scripts/FClient.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+    <link href="~/Content/toastr.min.css" rel="stylesheet" />
+    <script src="~/Scripts/toastr.js"></script>
+
+    <script>
+        var compId=@ViewBag.CompId;
+       
+        var path = '@System.Web.Configuration.WebConfigurationManager.AppSettings["IpAddress"]';
+        var domain ='@System.Web.Configuration.WebConfigurationManager.AppSettings["domain"]';
+
+        //----------------------------- report method calling ------------------------------------
+
+        $("#btnok").click(function () {
+            $("#progress").show();
+            debugger
+            var CompanyId=compId;
+            var selectedScreens = "";
+
+            $("input[type='radio']:checked").each(function () {
+                if (this.checked == true) {
+                    if (selectedScreens!="")
+                        selectedScreens = selectedScreens + ',' + $(this).closest('label').text().trim();
+                    else
+                        selectedScreens = $(this).closest('label').text().trim();
+                }
+            });
+
+          
+            if (selectedScreens == "") {
+                toastr.warning("Please Select Atleast One Screen");
+                $("#progress").hide();
+            }
+            else {
+
+                $.ajax({
+                    url: domain + '/Home/Posting',
+                    cache: false,
+                    type: "POST",
+                    datatype: 'JSON',
+                    async: true,
+                    data: { CompanyId: compId, screenNames: selectedScreens },
+                    success: function (response) {
+                        debugger
+                        alert("Posted Successfully");
+                        $("#progress").hide();
+                        $("input[type='radio']:checked").prop("checked", false);
+                    },
+                    error: function (err) {
+                        alert("Posting Failed");
+                        $("#progress").hide();
+                        console.log(err)
+                    }
+                })
+            }
+        });
+     
+
+        $('#btnClose').click(function () {
+            debugger;
+            Focus8WAPI.gotoHomePage();
+        });
+
+        //--------------------------------------------- Focus8W js file -------------------------------
+
+        function getSetPropertyForMastersField() {
+            // Focus8WAPI.getGlobalValue("fnGetValueCallBack1", "COMPANYID", 1);
+            Focus8WAPI.getGlobalValue("fnGetValueCallBack1", "", 1);
+
+        }
+
+        function fnGetValueCallBack1(objWrapperResult) {
+
+            var responseData = objWrapperResult.data;
+            if (objWrapperResult.requestType == 1) {
+                if (objWrapperResult.iRequestId == 1) {
+                    CCode = responseData.CompanyId;//this is the company id
+                }
+            }
+        }
+    </script>
+}
+
