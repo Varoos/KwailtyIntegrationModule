@@ -1,0 +1,22 @@
+﻿@{
+    ViewBag.Title = "Success";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+<table style="width:100%">
+    <tr>
+        <td>
+            <h1 class="text-danger" style="text-align:center">Posted Successfully</h1>
+
+
+            @Html.ActionLink("Back", "BOM_Request", "Home", new { @CompanyId = TempData["CompanyId"] }, new { @class = "btn btn-primary btn-sm sucessbtn" })
+
+
+        </td>
+    </tr>
+</table>
+<style>
+    .sucessbtn{
+        float:right !important;
+    }
+</style>
